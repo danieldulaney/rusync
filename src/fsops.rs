@@ -2,12 +2,10 @@ extern crate pathdiff;
 
 use std;
 use std::error::Error;
-use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::Read;
 use std::io::Write;
-use std::os::unix;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::mpsc;
@@ -145,7 +143,16 @@ pub fn copy_permissions(src: &Entry, dest: &Entry) -> FSResult<()> {
     Ok(())
 }
 
+#[cfg(windows)]
+fn copy_link(_src: &Entry, _dest: &Entry) -> FSResult<SyncOutcome> {
+    Err(FSError::from_description("Symlinks are not supported on Windows"))
+}
+
+#[cfg(unix)]
 fn copy_link(src: &Entry, dest: &Entry) -> FSResult<SyncOutcome> {
+    use std::fs;
+    use std::os::unix;
+
     let src_target = std::fs::read_link(src.path());
     if let Err(e) = src_target {
         return Err(FSError::from_io_error(
@@ -295,7 +302,7 @@ pub fn sync_entries(
     Ok(SyncOutcome::UpToDate)
 }
 
-#[cfg(test)]
+#[cfg(all(test,unix))]
 mod tests {
 
     extern crate tempdir;
