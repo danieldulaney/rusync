@@ -108,6 +108,12 @@ fn is_more_recent_than(src: &Entry, dest: &Entry) -> bool {
     src_precise > dest_precise
 }
 
+#[cfg(windows)]
+pub fn copy_permissions(_src: &Entry, _dest: &Entry) -> FSResult<()> {
+    Ok(())
+}
+
+#[cfg(unix)]
 pub fn copy_permissions(src: &Entry, dest: &Entry) -> FSResult<()> {
     let src_meta = &src.metadata();
     // is_link should not be none because we should have been able to
